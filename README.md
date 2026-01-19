@@ -38,30 +38,3 @@ I built this project to demonstrate real-world data engineering patterns:
 cp .env.example .env
 docker compose up -d --build
 
-''''
-
-
-```
-
-.
-├─ docker/
-│  ├─ postgres/init/               # schema + seed + CDC permissions.
-│  ├─ clickhouse/init/             # raw tables (ReplacingMergeTree).
-│  ├─ generator/Dockerfile
-│  └─ consumer/Dockerfile
-├─ connectors/
-│  └─ postgres-source.json         # Debezium connector config.
-├─ src/
-│  ├─ generator/generate_orders.py   # synthetic workload.
-│  └─ consumer/cdc_to_clickhouse.py  # CDC sink.
-├─ dbt/streamshop/
-│  ├─ models/
-│  ├─ macros/
-│  ├─ packages.yml
-│  └─ dbt_project.yml
-├─ scripts/
-│  └─ register_connector.sh
-├─ .github/workflows/ci.yml
-└─ README.md
-
-```
