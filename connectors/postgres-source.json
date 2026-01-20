@@ -1,0 +1,30 @@
+
+{
+  "name": "streamshop-postgres-cdc",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "debezium",
+    "database.password": "debezium",
+    "database.dbname": "streamshop",
+
+    "topic.prefix": "streamshop",
+
+    "plugin.name": "pgoutput",
+    "publication.name": "dbz_publication",
+    "publication.autocreate.mode": "disabled",
+
+    "schema.include.list": "public",
+    "table.include.list": "public.customers,public.products,public.orders,public.order_items",
+
+    "snapshot.mode": "initial",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}
