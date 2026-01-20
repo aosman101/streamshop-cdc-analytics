@@ -1,5 +1,7 @@
 # streamshop-cdc-analytics
 
+[![Postgres](https://img.shields.io/badge/Postgres-14%2B-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Debezium](https://img.shields.io/badge/Debezium-CDC-E2492F?logo=apachekafka&logoColor=white)](https://debezium.io/) [![Redpanda](https://img.shields.io/badge/Redpanda-Kafka_API-EE1F26?logo=redpanda&logoColor=white)](https://redpanda.com/) [![ClickHouse](https://img.shields.io/badge/ClickHouse-OLAP-FFCC01?logo=clickhouse&logoColor=000)](https://clickhouse.com/) [![dbt](https://img.shields.io/badge/dbt-Models-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/) [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/) [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
+
 A local, production-style Change Data Capture (CDC) analytics platform:
 **Postgres (OLTP) → Debezium (CDC) → Redpanda (Kafka API) → ClickHouse (OLAP) → dbt (marts + tests) → CI**
 
@@ -37,4 +39,3 @@ I built this project to demonstrate real-world data engineering patterns:
 ```bash
 cp .env.example .env
 docker compose up -d --build
-
