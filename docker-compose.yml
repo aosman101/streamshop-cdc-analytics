@@ -141,3 +141,17 @@ services:
       - ch_data:/var/lib/clickhouse
       - ./docker/clickhouse/init:/docker-entrypoint-initdb.d
     networks: [streamshop_net]
+
+  generator:
+    build:
+      context: .
+      dockerfile: docker/generator/Dockerfile
+    container_name: generator
+    depends_on: [postgres]
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: streamshop
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    networks: [streamshop_net]
