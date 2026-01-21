@@ -155,3 +155,22 @@ services:
       PGUSER: postgres
       PGPASSWORD: postgres
     networks: [streamshop_net]
+
+  cdc-sink:
+    build:
+      context: .
+      dockerfile: docker/consumer/Dockerfile
+    container_name: cdc-sink
+    depends_on:
+      - redpanda-0
+      - clickhouse
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: redpanda-0:9092
+      KAFKA_GROUP_ID: cdc-sink
+      KAFKA_TOPICS_REGEX: '^streamshop\.public\.(customers|products|orders|order_items)$'
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_USER: analytics
+      CLICKHOUSE_PASSWORD: analytics
+      CLICKHOUSE_DATABASE: analytics
+    networks: [streamshop_net]
