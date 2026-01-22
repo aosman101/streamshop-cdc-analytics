@@ -1,0 +1,11 @@
+streamshop:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: analytics
+      host: localhost
+      port: 8123
+      user: analytics
+      password: analytics
+      secure: false
