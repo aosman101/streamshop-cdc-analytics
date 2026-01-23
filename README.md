@@ -16,7 +16,7 @@ Hands-on, production-style Change Data Capture (CDC) analytics stack for streami
 - dbt build + tests wired to CI for fast feedback.
 
 ## Stretch goals implemented
-- Schema registry + contracts: Debezium emits Avro via Redpanda’s schema registry (http://localhost:18081/subjects), and dbt contracts enforce model schemas so evolution is explicit end-to-end.
+- Schema registry + contracts: Debezium emits Avro via Redpanda’s schema registry (http://localhost:18081/subjects), and dbt contracts enforce model schemas so evolution is explicit end-to-end (example: new `orders.channel` column flows through ClickHouse + dbt).
 - Outbox pattern: Postgres now writes domain events to `outbox_events`, Debezium streams `streamshop.public.outbox_events`, and the CDC sink lands them in `analytics.raw_outbox_events` + `stg_outbox_events`.
 - dbt snapshots: SCD2 snapshot of product prices (`product_price_scd2`) tracks price history in ClickHouse using `dbt snapshot`.
 

@@ -36,6 +36,8 @@ models:
         data_type: Int32
       - name: currency
         data_type: FixedString(3)
+      - name: channel
+        data_type: String
       - name: created_at
         data_type: DateTime64(3)
       - name: updated_at
@@ -94,6 +96,8 @@ models:
         data_type: Int32
       - name: currency
         data_type: FixedString(3)
+      - name: channel
+        data_type: String
       - name: created_at
         data_type: DateTime64(3)
       - name: updated_at
