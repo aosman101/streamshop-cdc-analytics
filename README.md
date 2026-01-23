@@ -22,10 +22,11 @@ Hands-on, production-style Change Data Capture (CDC) analytics stack for streami
 
 ## How it flows
 ```
-Postgres (Faker workload)
-  └─ Debezium + Kafka Connect → Redpanda topics (streamshop.public.*)
-       └─ Python CDC sink → ClickHouse analytics.raw_* (ReplacingMergeTree)
-            └─ dbt → staging views + marts
+Postgres (Faker workload + outbox_events)
+  └─ Debezium + Kafka Connect (Avro + Schema Registry) → Redpanda topics (streamshop.public.*)
+       ├─ Python CDC sink → ClickHouse analytics.raw_* (ReplacingMergeTree)
+       └─ Outbox events → ClickHouse analytics.raw_outbox_events
+            └─ dbt → staging views + marts + snapshot (product_price_scd2)
 ```
 
 ## Services and ports
@@ -46,9 +47,10 @@ Postgres (Faker workload)
 - `docker/clickhouse/init` — raw `_version`/`_deleted` tables using ReplacingMergeTree.
 - `connectors/postgres-source.json` — Debezium connector config (pgoutput, five tables including outbox events).
 - `scripts/register_connector.sh` — helper to register the connector once Connect is healthy.
-- `src/generator` — Faker workload that creates/updates orders and product prices.
+- `src/generator` — Faker workload that creates/updates orders, adjusts prices, and writes domain events into `outbox_events`.
 - `src/consumer` — Kafka consumer (Avro + schema registry) that normalizes Debezium events and writes JSONEachRow to ClickHouse.
 - `dbt/streamshop` — sources, staging views, marts (`dim_customers`, `fct_orders`), outbox staging, and SCD2 snapshot of product prices.
+- `dbt/streamshop/snapshots` — dbt snapshot definitions (product price SCD2).
 
 ## Quickstart
 1) **Start the platform**
@@ -56,6 +58,7 @@ Postgres (Faker workload)
 docker compose up -d --build
 ```
 The generator and CDC sink containers will start automatically once dependencies are healthy.
+If you previously ran an older version, do a clean start first: `docker compose down -v`.
 
 2) **Register the Debezium connector** (wait until `connect` is up)
 ```bash
@@ -65,6 +68,7 @@ The script polls `CONNECT_URL` (defaults to http://localhost:8083) before postin
 
 3) **Watch the data flow**
 - Redpanda Console: open http://localhost:8080 and inspect `streamshop.public.*` topics.
+- Schema Registry: verify schemas at http://localhost:18081/subjects.
 - Postgres check: `docker exec -it postgres psql -U postgres -d streamshop -c "select status, count(*) from orders group by 1 order by 2 desc;"`
 - ClickHouse check: `docker exec -it clickhouse clickhouse-client -u analytics --password analytics -q "select order_id, status, _deleted, _version from analytics.raw_orders order by _version desc limit 10;"`.
 - Outbox events: `docker exec -it clickhouse clickhouse-client -u analytics --password analytics -q "select event_type, count(*) from analytics.raw_outbox_events group by event_type;"`.
