@@ -15,10 +15,10 @@ Hands-on, production-style Change Data Capture (CDC) analytics stack for streami
 - Local CDC pipeline from Postgres → Debezium → Redpanda → ClickHouse → dbt, fully containerized.
 - dbt build + tests wired to CI for fast feedback.
 
-## After-MVP ideas
-- Schema registry + contracts: show schema evolution handling (new column in Postgres → Debezium → sink → ClickHouse → dbt contracts). Redpanda Console in this single-broker setup already exposes schema registry endpoints you can lean on.
-- Outbox pattern: add an `outbox_events` table in Postgres and route domain events separately for microservice-friendly integrations.
-- dbt snapshots: implement SCD2 for product price changes using dbt-clickhouse snapshots.
+## Stretch goals implemented
+- Schema registry + contracts: Debezium emits Avro via Redpanda’s schema registry (http://localhost:18081/subjects), and dbt contracts enforce model schemas so evolution is explicit end-to-end.
+- Outbox pattern: Postgres now writes domain events to `outbox_events`, Debezium streams `streamshop.public.outbox_events`, and the CDC sink lands them in `analytics.raw_outbox_events` + `stg_outbox_events`.
+- dbt snapshots: SCD2 snapshot of product prices (`product_price_scd2`) tracks price history in ClickHouse using `dbt snapshot`.
 
 ## How it flows
 ```
@@ -34,6 +34,7 @@ Postgres (Faker workload)
 | Postgres | OLTP source with logical replication enabled | 5432 |
 | Debezium Connect | Kafka Connect worker for CDC | 8083 |
 | Redpanda broker | Kafka API compatible broker | 19092 (PLAINTEXT) |
+| Schema Registry (Redpanda) | Avro/JSON/Protobuf schemas for topics | http://localhost:18081 |
 | Redpanda Console | UI for topics/consumers | http://localhost:8080 |
 | ClickHouse | OLAP warehouse target | 8123 (HTTP), 9000 (native) |
 | generator | Faker workload that keeps writing orders | runs headless |
@@ -43,11 +44,11 @@ Postgres (Faker workload)
 - `docker-compose.yml` — brings up Postgres, Debezium Connect, Redpanda, ClickHouse, generator, and CDC sink.
 - `docker/postgres/init` — OLTP schema plus Debezium publication and replication user.
 - `docker/clickhouse/init` — raw `_version`/`_deleted` tables using ReplacingMergeTree.
-- `connectors/postgres-source.json` — Debezium connector config (pgoutput, four tables).
+- `connectors/postgres-source.json` — Debezium connector config (pgoutput, five tables including outbox events).
 - `scripts/register_connector.sh` — helper to register the connector once Connect is healthy.
 - `src/generator` — Faker workload that creates/updates orders and product prices.
-- `src/consumer` — Kafka consumer that normalizes Debezium events and writes JSONEachRow to ClickHouse.
-- `dbt/streamshop` — sources, staging views, and marts (`dim_customers`, `fct_orders`).
+- `src/consumer` — Kafka consumer (Avro + schema registry) that normalizes Debezium events and writes JSONEachRow to ClickHouse.
+- `dbt/streamshop` — sources, staging views, marts (`dim_customers`, `fct_orders`), outbox staging, and SCD2 snapshot of product prices.
 
 ## Quickstart
 1) **Start the platform**
@@ -60,12 +61,13 @@ The generator and CDC sink containers will start automatically once dependencies
 ```bash
 ./scripts/register_connector.sh
 ```
-The script polls `CONNECT_URL` (defaults to http://localhost:8083) before posting the config in `connectors/postgres-source.json`.
+The script polls `CONNECT_URL` (defaults to http://localhost:8083) before posting the config in `connectors/postgres-source.json`. Debezium is configured with Avro converters and Redpanda’s schema registry, so schemas will appear under `http://localhost:18081/subjects`.
 
 3) **Watch the data flow**
 - Redpanda Console: open http://localhost:8080 and inspect `streamshop.public.*` topics.
 - Postgres check: `docker exec -it postgres psql -U postgres -d streamshop -c "select status, count(*) from orders group by 1 order by 2 desc;"`
 - ClickHouse check: `docker exec -it clickhouse clickhouse-client -u analytics --password analytics -q "select order_id, status, _deleted, _version from analytics.raw_orders order by _version desc limit 10;"`.
+- Outbox events: `docker exec -it clickhouse clickhouse-client -u analytics --password analytics -q "select event_type, count(*) from analytics.raw_outbox_events group by event_type;"`.
 
 4) **Build analytics with dbt** (run locally)
 ```bash
@@ -76,15 +78,23 @@ DBT_PROFILES_DIR=$(pwd) dbt build
 ```
 Profiles point at the ClickHouse container (`analytics` user/password). `dbt build` will materialize staging views and marts on top of the CDC raw tables.
 
-5) **Tear down when done**
+5) **Run the SCD2 snapshot (product price history)**
+```bash
+cd dbt/streamshop
+DBT_PROFILES_DIR=$(pwd) dbt snapshot --select product_price_scd2
+```
+Query history: `docker exec -it clickhouse clickhouse-client -u analytics --password analytics -q "select product_id, price_cents, dbt_valid_from, dbt_valid_to from analytics.product_price_scd2 order by product_id, dbt_valid_from limit 20;"`.
+
+6) **Tear down when done**
 ```bash
 docker compose down -v
 ```
 
 ## CDC/raw table design
-- Debezium captures inserts/updates/deletes from Postgres tables: `customers`, `products`, `orders`, `order_items`.
-- The Python sink batches CDC events, maps topics to ClickHouse `analytics.raw_*` tables, and writes with `JSONEachRow`.
+- Debezium captures inserts/updates/deletes from Postgres tables: `customers`, `products`, `orders`, `order_items`, `outbox_events`.
+- The Python sink consumes Avro with Redpanda’s schema registry, batches CDC events, maps topics to ClickHouse `analytics.raw_*` tables, and writes with `JSONEachRow`.
 - Raw tables use `ReplacingMergeTree(_version, _deleted)` so newer versions replace old ones and tombstones are preserved.
 - dbt staging filters `_deleted = 0` to expose only current rows; marts are built on top of those staging views.
+- Contracts: dbt model contracts are enabled with explicit column data types; schema changes become visible/managed instead of silent.
 
 Happy streaming!

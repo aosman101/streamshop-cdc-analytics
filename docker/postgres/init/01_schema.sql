@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS orders (
   status       TEXT NOT NULL,
   total_cents  INT  NOT NULL,
   currency     TEXT NOT NULL DEFAULT 'GBP',
+  channel      TEXT NOT NULL DEFAULT 'web',
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

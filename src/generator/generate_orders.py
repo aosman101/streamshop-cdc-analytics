@@ -16,6 +16,7 @@ PGUSER = os.getenv("PGUSER", "postgres")
 PGPASSWORD = os.getenv("PGPASSWORD", "postgres")
 
 STATUSES = ["created", "paid", "shipped", "delivered", "cancelled"]
+CHANNELS = ["web", "mobile", "store", "social"]
 
 def now_utc():
     return datetime.now(timezone.utc)
@@ -78,14 +79,15 @@ def create_order(cur):
         items.append((product_id, qty, price))
 
     now_ts = now_utc()
+    channel = random.choice(CHANNELS)
 
     cur.execute(
         """
-        INSERT INTO orders (customer_id, status, total_cents, currency, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO orders (customer_id, status, total_cents, currency, channel, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING order_id;
         """,
-        (customer_id, "created", total, "GBP", now_ts, now_ts),
+        (customer_id, "created", total, "GBP", channel, now_ts, now_ts),
     )
     order_id = cur.fetchone()[0]
 
@@ -108,6 +110,7 @@ def create_order(cur):
             "status": "created",
             "total_cents": total,
             "currency": "GBP",
+            "channel": channel,
             "items": [
                 {"product_id": pid, "quantity": qty, "unit_price_cents": price} for pid, qty, price in items
             ],

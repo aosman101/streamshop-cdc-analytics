@@ -107,9 +107,9 @@ def normalize_payload(record: dict, table: str, key: dict | None) -> dict | None
 def main():
     consumer = get_consumer()
 
-    batch = []
+    batches: dict[str, list[dict]] = {}
     batch_size = 200
-    last_flush = time.time()
+    last_flush: dict[str, float] = {}
     flush_every_s = 1.0
 
     try:
@@ -139,14 +139,21 @@ def main():
             if not row:
                 continue
 
-            batch.append(row)
+            table_batch = batches.setdefault(table, [])
+            table_batch.append(row)
 
             now = time.time()
-            if len(batch) >= batch_size or (now - last_flush) >= flush_every_s:
-                ch_insert(TABLE_MAP[table], batch)
-                batch.clear()
-                last_flush = now
+            last_flush.setdefault(table, now)
+
+            if len(table_batch) >= batch_size or (now - last_flush[table]) >= flush_every_s:
+                ch_insert(TABLE_MAP[table], table_batch)
+                table_batch.clear()
+                last_flush[table] = now
     finally:
+        # Flush any remaining rows
+        for table, rows in batches.items():
+            if rows:
+                ch_insert(TABLE_MAP[table], rows)
         consumer.close()
 
 if __name__ == "__main__":

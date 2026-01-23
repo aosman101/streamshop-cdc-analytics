@@ -2,7 +2,7 @@
 {{
   config(
     target_database='analytics',
-    target_schema='snapshots',
+    target_schema='analytics',
     unique_key='product_id',
     strategy='check',
     check_cols=['price_cents'],

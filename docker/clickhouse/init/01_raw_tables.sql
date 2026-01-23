@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS analytics.raw_orders
   status       LowCardinality(String),
   total_cents  Int32,
   currency     FixedString(3),
+  channel      LowCardinality(String),
   created_at   DateTime64(3, 'UTC'),
   updated_at   DateTime64(3, 'UTC'),
   _version     UInt64,
