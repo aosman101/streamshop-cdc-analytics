@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: Latest customer records filtered from raw CDC stream.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: customer_id
+        data_type: UInt64
+        tests: [unique, not_null]
+      - name: email
+        data_type: String
+      - name: full_name
+        data_type: String
+      - name: created_at
+        data_type: DateTime64(3)
+      - name: updated_at
+        data_type: DateTime64(3)
+
+  - name: stg_orders
+    description: Latest orders with status and totals filtered from raw CDC stream.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: order_id
+        data_type: UInt64
+        tests: [unique, not_null]
+      - name: customer_id
+        data_type: UInt64
+      - name: status
+        data_type: String
+      - name: total_cents
+        data_type: Int32
+      - name: currency
+        data_type: FixedString(3)
+      - name: created_at
+        data_type: DateTime64(3)
+      - name: updated_at
+        data_type: DateTime64(3)
+
+  - name: stg_outbox_events
+    description: Domain events produced via outbox table to decouple microservice integration.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: event_id
+        data_type: UInt64
+        tests: [unique, not_null]
+      - name: aggregate_type
+        data_type: String
+      - name: aggregate_id
+        data_type: UInt64
+      - name: event_type
+        data_type: String
+      - name: payload
+        data_type: String
+      - name: created_at
+        data_type: DateTime64(3)
+
+  - name: dim_customers
+    description: Customer dimension derived from staging.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: customer_id
+        data_type: UInt64
+        tests: [unique, not_null]
+      - name: email
+        data_type: String
+      - name: full_name
+        data_type: String
+      - name: created_at
+        data_type: DateTime64(3)
+
+  - name: fct_orders
+    description: Order fact table derived from staging orders.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: order_id
+        data_type: UInt64
+        tests: [unique, not_null]
+      - name: customer_id
+        data_type: UInt64
+      - name: status
+        data_type: String
+      - name: total_cents
+        data_type: Int32
+      - name: currency
+        data_type: FixedString(3)
+      - name: created_at
+        data_type: DateTime64(3)
+      - name: updated_at
+        data_type: DateTime64(3)

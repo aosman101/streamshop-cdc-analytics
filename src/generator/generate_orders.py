@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timezone
 
 import psycopg2
+from psycopg2.extras import Json
 from faker import Faker
 
 fake = Faker()
@@ -76,13 +77,15 @@ def create_order(cur):
         total += price * qty
         items.append((product_id, qty, price))
 
+    now_ts = now_utc()
+
     cur.execute(
         """
         INSERT INTO orders (customer_id, status, total_cents, currency, created_at, updated_at)
         VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING order_id;
         """,
-        (customer_id, "created", total, "GBP", now_utc(), now_utc()),
+        (customer_id, "created", total, "GBP", now_ts, now_ts),
     )
     order_id = cur.fetchone()[0]
 
@@ -92,8 +95,25 @@ def create_order(cur):
             INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents, created_at, updated_at)
             VALUES (%s, %s, %s, %s, %s, %s);
             """,
-            (order_id, product_id, qty, price, now_utc(), now_utc()),
+            (order_id, product_id, qty, price, now_ts, now_ts),
         )
+
+    emit_outbox_event(
+        cur,
+        aggregate_type="order",
+        aggregate_id=order_id,
+        event_type="order_created",
+        payload={
+            "customer_id": customer_id,
+            "status": "created",
+            "total_cents": total,
+            "currency": "GBP",
+            "items": [
+                {"product_id": pid, "quantity": qty, "unit_price_cents": price} for pid, qty, price in items
+            ],
+            "created_at": now_ts.isoformat(),
+        },
+    )
 
 def randomly_update_order(cur):
     cur.execute("SELECT order_id, status FROM orders ORDER BY random() LIMIT 1;")
@@ -106,13 +126,27 @@ def randomly_update_order(cur):
     if new_status == status:
         return
 
+    new_ts = now_utc()
+
     cur.execute(
         """
         UPDATE orders
         SET status = %s, updated_at = %s
         WHERE order_id = %s;
         """,
-        (new_status, now_utc(), order_id),
+        (new_status, new_ts, order_id),
+    )
+
+    emit_outbox_event(
+        cur,
+        aggregate_type="order",
+        aggregate_id=order_id,
+        event_type="order_status_updated",
+        payload={
+            "previous_status": status,
+            "new_status": new_status,
+            "updated_at": new_ts.isoformat(),
+        },
     )
 
 def randomly_update_product_price(cur):
@@ -124,13 +158,36 @@ def randomly_update_product_price(cur):
     delta = random.randint(-200, 500)
     new_price = max(99, price + delta)
 
+    new_ts = now_utc()
+
     cur.execute(
         """
         UPDATE products
         SET price_cents = %s, updated_at = %s
         WHERE product_id = %s;
         """,
-        (new_price, now_utc(), product_id),
+        (new_price, new_ts, product_id),
+    )
+
+    emit_outbox_event(
+        cur,
+        aggregate_type="product",
+        aggregate_id=product_id,
+        event_type="product_price_changed",
+        payload={
+            "previous_price_cents": price,
+            "new_price_cents": new_price,
+            "updated_at": new_ts.isoformat(),
+        },
+    )
+
+def emit_outbox_event(cur, aggregate_type: str, aggregate_id: int, event_type: str, payload: dict):
+    cur.execute(
+        """
+        INSERT INTO outbox_events (aggregate_type, aggregate_id, event_type, payload, created_at)
+        VALUES (%s, %s, %s, %s, %s);
+        """,
+        (aggregate_type, aggregate_id, event_type, Json(payload), now_utc()),
     )
 
 def main():
