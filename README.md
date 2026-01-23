@@ -11,6 +11,15 @@ Hands-on, production-style Change Data Capture (CDC) analytics stack for streami
 - Provide dbt models/tests for analytics-ready marts on top of streaming sinks.
 - Make the whole workflow reproducible locally with Docker Compose.
 
+## MVP (what you get out of the box)
+- Local CDC pipeline from Postgres → Debezium → Redpanda → ClickHouse → dbt, fully containerized.
+- dbt build + tests wired to CI for fast feedback.
+
+## After-MVP ideas
+- Schema registry + contracts: show schema evolution handling (new column in Postgres → Debezium → sink → ClickHouse → dbt contracts). Redpanda Console in this single-broker setup already exposes schema registry endpoints you can lean on.
+- Outbox pattern: add an `outbox_events` table in Postgres and route domain events separately for microservice-friendly integrations.
+- dbt snapshots: implement SCD2 for product price changes using dbt-clickhouse snapshots.
+
 ## How it flows
 ```
 Postgres (Faker workload)
