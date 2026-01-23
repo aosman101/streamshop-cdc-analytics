@@ -38,13 +38,24 @@ CREATE TABLE IF NOT EXISTS order_items (
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Outbox table for domain events (microservice-friendly integration pattern)
+CREATE TABLE IF NOT EXISTS outbox_events (
+  event_id        BIGSERIAL PRIMARY KEY,
+  aggregate_type  TEXT NOT NULL,
+  aggregate_id    BIGINT NOT NULL,
+  event_type      TEXT NOT NULL,
+  payload         JSONB NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Optional but useful for delete events (captures full row state)
 ALTER TABLE customers    REPLICA IDENTITY FULL;
 ALTER TABLE products     REPLICA IDENTITY FULL;
 ALTER TABLE orders       REPLICA IDENTITY FULL;
 ALTER TABLE order_items  REPLICA IDENTITY FULL;
+ALTER TABLE outbox_events REPLICA IDENTITY FULL;
 
 -- Publication for pgoutput (Debezium will read from this publication)
 DROP PUBLICATION IF EXISTS dbz_publication;
 CREATE PUBLICATION dbz_publication FOR TABLE
-  customers, products, orders, order_items;
+  customers, products, orders, order_items, outbox_events;

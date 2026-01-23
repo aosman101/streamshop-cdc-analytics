@@ -61,3 +61,17 @@ CREATE TABLE IF NOT EXISTS analytics.raw_order_items
 )
 ENGINE = ReplacingMergeTree(_version, _deleted)
 ORDER BY (order_item_id);
+
+CREATE TABLE IF NOT EXISTS analytics.raw_outbox_events
+(
+  event_id       UInt64,
+  aggregate_type LowCardinality(String),
+  aggregate_id   UInt64,
+  event_type     LowCardinality(String),
+  payload        String,
+  created_at     DateTime64(3, 'UTC'),
+  _version       UInt64,
+  _deleted       UInt8
+)
+ENGINE = ReplacingMergeTree(_version, _deleted)
+ORDER BY (event_id);

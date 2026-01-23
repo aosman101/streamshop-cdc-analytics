@@ -108,14 +108,12 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
 
-      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://redpanda-0:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://redpanda-0:8081
       CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
 
       HEAP_OPTS: "-Xms256M -Xmx1G"
     networks: [streamshop_net]
@@ -167,7 +165,8 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: redpanda-0:9092
       KAFKA_GROUP_ID: cdc-sink
-      KAFKA_TOPICS_REGEX: '^streamshop\.public\.(customers|products|orders|order_items)$'
+      KAFKA_TOPICS_REGEX: '^streamshop\.public\.(customers|products|orders|order_items|outbox_events)$'
+      SCHEMA_REGISTRY_URL: http://redpanda-0:8081
       CLICKHOUSE_HOST: clickhouse
       CLICKHOUSE_PORT: 8123
       CLICKHOUSE_USER: analytics
