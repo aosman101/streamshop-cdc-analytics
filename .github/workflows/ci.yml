@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  dbt-clickhouse:
+    runs-on: ubuntu-latest
+
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:latest
+        ports:
+          - 8123:8123
+        env:
+          CLICKHOUSE_DB: analytics
+          CLICKHOUSE_USER: analytics
+          CLICKHOUSE_PASSWORD: analytics
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        options: >-
+          --health-cmd "wget --spider -q http://localhost:8123/ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install dbt-core dbt-clickhouse
+
+      - name: dbt deps + build
+        working-directory: dbt/streamshop
+        run: |
+          dbt deps
+          dbt debug --profiles-dir .
+          dbt build --profiles-dir .
