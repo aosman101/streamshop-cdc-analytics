@@ -89,4 +89,4 @@ flowchart LR
 - Python sink maps topics to `analytics.raw_*`, stamps `_version` from Debezium event time, and preserves deletes via `_deleted`.
 - dbt staging filters `_deleted = 0`; marts and snapshot build on top with model contracts enforced.
 
-Happy streaming! The stack is complete and optimized for hands-on CDC experimentation and analytics. 
+Happy streaming! The stack is fully developed and optimised for hands-on experimentation and analytics in CDC.
