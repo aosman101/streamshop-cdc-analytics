@@ -14,14 +14,23 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
 
 ## Architecture at a glance
 ```mermaid
-flowchart LR
-    G["Generator<br/>(Faker workload)"] --> PG["Postgres<br/>logical replication"]
-    PG -->|WAL + pgoutput| DBZ["Debezium<br/>Kafka Connect"]
-    DBZ -->|Avro| RP["Redpanda<br/>+ Schema Registry"]
-    RP --> CON["CDC Sink<br/>Python to JSONEachRow"]
-    CON --> CH["ClickHouse<br/>ReplacingMergeTree<br/>_version + _deleted"]
-    CH --> DBT["dbt models<br/>staging + marts + snapshot"]
-    DBT --> BI["Analytics/BI<br/>or demos"]
+flowchart TD
+    subgraph source_cdc [Source & CDC]
+        GEN["Generator<br/>(Faker workload)"] --> PG["Postgres<br/>WAL + outbox"]
+        PG -->|WAL + pgoutput| DBZ["Debezium<br/>Kafka Connect"]
+        DBZ -->|Avro| RP["Redpanda<br/>broker"]
+        RP -.-> SR["Schema Registry<br/>(Redpanda)"]
+    end
+
+    subgraph landing [Landing in ClickHouse]
+        RP --> SINK["CDC Sink<br/>Python batching<br/>JSONEachRow"]
+        SINK --> CH["ClickHouse<br/>ReplacingMergeTree<br/>_version + _deleted"]
+    end
+
+    subgraph analytics [Analytics layer]
+        CH --> DBT["dbt models<br/>staging + marts + snapshot"]
+        DBT --> BI["Analytics / BI<br/>queries + demos"]
+    end
 ```
 
 ## Quickstart (happy path)
