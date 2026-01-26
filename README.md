@@ -41,6 +41,54 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
    docker compose down -v
    ```
 
+## System architecture
+```
+      +-----------------------+
+      | Faker workload +      |
+      | outbox events (src)   |
+      +-----------+-----------+
+                  |
+                  v
+       +----------+----------+
+       |   Postgres (OLTP)   |
+       +----------+----------+
+                  |
+     logical replication / CDC
+                  v
+      +-----------+-----------+
+      | Debezium Connect      |
+      |   + Schema Registry   |
+      +-----------+-----------+
+                  |
+          Kafka API (Redpanda)
+                  v
+      +-----------+-----------+
+      | Redpanda broker       |
+      |   + Console           |
+      +-----------+-----------+
+                  |
+           Avro payloads
+                  v
+      +-----------+-----------+
+      | Python cdc-sink       |
+      | (JSONEachRow batches) |
+      +-----------+-----------+
+                  |
+          upserts/tombstones
+                  v
+      +-----------+-----------+
+      | ClickHouse warehouse  |
+      | raw/stg/marts tables  |
+      +-----------+-----------+
+                  |
+      dbt models/tests/snapshot
+                  v
+      +-----------+-----------+
+      | BI / notebooks        |
+      | (bring your own tool) |
+      +-----------------------+
+```
+
 ## Smoke checks
 - Postgres orders rolling in:  
   `docker exec -it postgres psql -U postgres -d streamshop -c "select status, count(*) from orders group by 1 order by 2 desc;"`
