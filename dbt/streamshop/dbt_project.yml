@@ -12,7 +12,8 @@ snapshot-paths: ["snapshots"]
 
 models:
   streamshop:
-    +contract: true
+    +contract:
+      enforced: true
     staging:
       +materialized: view
     marts:
