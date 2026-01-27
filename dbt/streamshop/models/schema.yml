@@ -15,9 +15,9 @@ models:
       - name: full_name
         data_type: String
       - name: created_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
       - name: updated_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
 
   - name: stg_orders
     description: Latest orders with status and totals filtered from raw CDC stream.
@@ -31,17 +31,17 @@ models:
       - name: customer_id
         data_type: UInt64
       - name: status
-        data_type: String
+        data_type: "LowCardinality(String)"
       - name: total_cents
         data_type: Int32
       - name: currency
-        data_type: FixedString(3)
-      - name: channel
         data_type: String
+      - name: channel
+        data_type: "LowCardinality(String)"
       - name: created_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
       - name: updated_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
 
   - name: stg_outbox_events
     description: Domain events produced via outbox table to decouple microservice integration.
@@ -53,15 +53,15 @@ models:
         data_type: UInt64
         tests: [unique, not_null]
       - name: aggregate_type
-        data_type: String
+        data_type: "LowCardinality(String)"
       - name: aggregate_id
         data_type: UInt64
       - name: event_type
-        data_type: String
+        data_type: "LowCardinality(String)"
       - name: payload
         data_type: String
       - name: created_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
 
   - name: dim_customers
     description: Customer dimension derived from staging.
@@ -77,7 +77,7 @@ models:
       - name: full_name
         data_type: String
       - name: created_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
 
   - name: fct_orders
     description: Order fact table derived from staging orders.
@@ -91,14 +91,14 @@ models:
       - name: customer_id
         data_type: UInt64
       - name: status
-        data_type: String
+        data_type: "LowCardinality(String)"
       - name: total_cents
         data_type: Int32
       - name: currency
-        data_type: FixedString(3)
-      - name: channel
         data_type: String
+      - name: channel
+        data_type: "LowCardinality(String)"
       - name: created_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
       - name: updated_at
-        data_type: DateTime64(3)
+        data_type: "DateTime64(3, 'UTC')"
