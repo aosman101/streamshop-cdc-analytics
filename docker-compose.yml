@@ -116,6 +116,8 @@ services:
       CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
 
       HEAP_OPTS: "-Xms256M -Xmx1G"
+    volumes:
+      - ./docker/connect/jars:/kafka/connect/avro
     networks: [streamshop_net]
 
   clickhouse:
