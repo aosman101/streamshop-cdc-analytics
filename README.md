@@ -7,10 +7,10 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
 ## What this project gives you
 - End-to-end CDC path **ready to run** locally with Docker Compose.
 - CDC-friendly ClickHouse raw tables using `_version`/`_deleted` for upserts + tombstones.
-- Outbox pattern with domain events flowing through the same pipeline.
-- dbt models with contracts, marts, and an SCD2 product price snapshot.
-- Schema registry + Avro wiring so schema evolution is explicit and validated.
-- CI running dbt against ClickHouse to keep models healthy.
+- The outbox pattern involves the flow of domain events through the same processing pipeline.
+- DBT models that include contracts, data marts, and a slowly changing dimension (SCD2) for product price snapshots.
+- Schema registry + Avro wiring ensures that schema evolution is explicit and validated.
+- Continuous Integration (CI) is running dbt with ClickHouse to ensure that the models remain healthy.
 
 ## Quickstart (happy path)
 1) Start everything  
@@ -84,7 +84,7 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
       dbt models/tests/snapshot
                   v
       +-----------+-----------+
-      | BI / notebooks        |
+      | BI/notebooks        |
       | (bring your own tool) |
       +-----------------------+
 ```
@@ -110,7 +110,7 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
 | generator | Faker workload that keeps writing orders | runs headless |
 | cdc-sink | Python consumer upserting CDC into ClickHouse | runs headless |
 
-## Repo layout (ready to trust)
+## Repo layout
 - `docker-compose.yml` — launches Postgres, Debezium Connect, Redpanda + Console + Schema Registry, ClickHouse, generator, and CDC sink.
 - `docker/postgres/init` — OLTP schema, publication, and Debezium replication user.
 - `docker/clickhouse/init` — raw `_version`/`_deleted` tables using ReplacingMergeTree.
