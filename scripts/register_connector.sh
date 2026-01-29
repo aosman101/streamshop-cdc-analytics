@@ -3,7 +3,8 @@ set -euo pipefail
 
 CONNECT_URL="${CONNECT_URL:-http://localhost:8083}"
 CONFIG_FILE="${1:-connectors/postgres-source.json}"
-MAX_RETRIES="${MAX_RETRIES:-30}"
+# Connect can take several minutes to finish plugin scanning on first boot.
+MAX_RETRIES="${MAX_RETRIES:-240}"
 
 echo "Waiting for Kafka Connect at ${CONNECT_URL} ..."
 for i in $(seq 1 "${MAX_RETRIES}"); do

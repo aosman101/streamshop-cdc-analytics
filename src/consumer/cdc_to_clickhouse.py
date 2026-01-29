@@ -41,10 +41,13 @@ def parse_dt(value):
     if value is None:
         return None
     if isinstance(value, str):
-        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
-    if isinstance(value, (int, float)):
-        return datetime.fromtimestamp(value / 1000.0, tz=timezone.utc)
-    return value
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    elif isinstance(value, (int, float)):
+        dt = datetime.fromtimestamp(value / 1000.0, tz=timezone.utc)
+    else:
+        return value
+    # ClickHouse JSONEachRow expects timezone-less timestamps; keep UTC but drop tzinfo.
+    return dt.replace(tzinfo=None)
 
 def ch_insert(table_fqdn: str, rows: list[dict]):
     if not rows:
