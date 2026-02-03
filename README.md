@@ -2,7 +2,7 @@
 
 [![Postgres](https://img.shields.io/badge/Postgres-14%2B-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Debezium](https://img.shields.io/badge/Debezium-CDC-E2492F?logo=apachekafka&logoColor=white)](https://debezium.io/) [![Redpanda](https://img.shields.io/badge/Redpanda-Kafka_API-EE1F26?logo=redpanda&logoColor=white)](https://redpanda.com/) [![ClickHouse](https://img.shields.io/badge/ClickHouse-OLAP-FFCC01?logo=clickhouse&logoColor=000)](https://clickhouse.com/) [![dbt](https://img.shields.io/badge/dbt-Models-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/) [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/) [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
-Complete and production-ready CDC analytics stack: Postgres change streams through Debezium into Redpanda, landing in ClickHouse via a Python sink and modelled with dbt, including SCD2 snapshot and outbox events.
+A complete and production-ready CDC analytics stack: Postgres change streams via Debezium into Redpanda, landing in ClickHouse through a Python sink and modelled with dbt, including SCD2 snapshots and outbox events.
 
 **Status (Feb 2026):** This is a fully functional reference implementation with no outstanding tasks or TODOs.
 
