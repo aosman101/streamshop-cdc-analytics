@@ -57,6 +57,11 @@ services:
         schemaRegistry:
           enabled: true
           urls: ["http://redpanda-0:8081"]
+        kafkaConnect:
+          enabled: true
+          clusters:
+            - name: debezium
+              url: http://connect:8083
         redpanda:
           adminApi:
             enabled: true
