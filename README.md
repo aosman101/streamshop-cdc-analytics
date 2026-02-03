@@ -4,6 +4,8 @@
 
 Production-ready CDC analytics stack that is fully wired, tested, and complete: Postgres changes stream through Debezium into Redpanda, land in ClickHouse via a Python sink, and are modelled with dbt (including SCD2 snapshot and outbox events).
 
+**Status (Feb 2026):** feature-complete reference implementation; no open TODOs.
+
 ## What this project gives you
 - End-to-end CDC path **ready to run** locally with Docker Compose.
 - CDC-friendly ClickHouse raw tables using `_version`/`_deleted` for upserts + tombstones.
@@ -11,6 +13,11 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
 - DBT models that include contracts, data marts, and a slowly changing dimension (SCD2) for product price snapshots.
 - Schema registry + Avro wiring ensures that schema evolution is explicit and validated.
 - Continuous Integration (CI) is running dbt with ClickHouse to ensure that the models remain healthy.
+
+## Prerequisites
+- Docker Desktop/Engine 24+ with Compose v2 enabled.
+- Python 3.12 (tested) for dbt and local tooling.
+- `curl` + `jq` for connector registration scripts.
 
 ## Quickstart (happy path)
 1) Start everything  
@@ -26,6 +33,7 @@ Production-ready CDC analytics stack that is fully wired, tested, and complete: 
    - Schema Registry: http://localhost:18081/subjects
 4) Run analytics with dbt (locally)  
    ```bash
+   python3.12 -m venv .venv && source .venv/bin/activate  # optional but recommended
    pip install "dbt-core~=1.8" "dbt-clickhouse"
    cd dbt/streamshop
    DBT_PROFILES_DIR=$(pwd) dbt deps

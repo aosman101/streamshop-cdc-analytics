@@ -4,7 +4,6 @@ __pycache__/
 .venv/
 .env
 .envrc
-.venv312/
 dbt_packages/
 target/
 .DS_Store
