@@ -37,6 +37,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install dbt-core dbt-clickhouse
 
+      - name: Prep ClickHouse raw tables
+        run: |
+          # Ensure the service is ready before issuing DDL
+          for i in {1..30}; do
+            if curl -sf http://localhost:8123/ping | grep -q OK; then
+              break
+            fi
+            sleep 1
+          done
+
+          # Use the server container's built-in client so we can run multi-statement DDL
+          docker exec -i ${{ job.services.clickhouse.id }} \
+            clickhouse-client --multiquery < docker/clickhouse/init/01_raw_tables.sql
+
       - name: dbt deps + build
         working-directory: dbt/streamshop
         run: |
